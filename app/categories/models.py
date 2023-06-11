@@ -4,6 +4,7 @@ from app.db import db, BaseModelMixin
 class Category(db.Model, BaseModelMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False, unique=True)
+    words = db.relationship('Word', backref='category', lazy=True, cascade='all, delete-orphan')
     suggestions = db.relationship('Suggestion', backref='category', lazy=True, cascade='all, delete-orphan')
     
     def __init__(self, name):

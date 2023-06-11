@@ -7,6 +7,7 @@ class WordSchema(ma.Schema):
     id = fields.Integer(dump_only=True)
     word = fields.String(required=True)
     meanings = fields.Nested('MeaningSchema', many=True)
+    category_id = fields.Integer(required=True)
     user_difficulty = fields.Nested('DifficultySchema', many=True)
 
 
