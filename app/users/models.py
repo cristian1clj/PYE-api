@@ -5,9 +5,9 @@ from app.db import db, BaseModelMixin
 
 class User(db.Model, BaseModelMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String)
-    password_hash = db.Column(db.String)
-    email = db.Column(db.String)
+    username = db.Column(db.String(30), nullable=False)
+    password_hash = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(60), nullable=False, unique=True)
     suggestions = db.relationship('Suggestion', backref='user', lazy=True, cascade='all, delete-orphan')
     vocabulary_difficulty = db.relationship('Difficulty', backref='user', lazy=True, cascade='all, delete-orphan')
     
