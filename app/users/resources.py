@@ -49,7 +49,6 @@ class UserResource(Resource):
 
         data = request.get_json()
         user.username = data['username']
-        user.password_hash = data['password_hash']
         user.email = data['email']
         user.update()
         
@@ -59,7 +58,7 @@ class UserResource(Resource):
     def delete(self, user_id):
         user = self._user_validation(user_id)
         user.delete()
-        return {"message": "User deleted"}, 204
+        return {"message": "User deleted"}
 
 
 api.add_resource(UserListResource, '/api/users/', endpoint='user_list_resource')

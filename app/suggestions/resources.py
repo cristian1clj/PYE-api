@@ -47,6 +47,40 @@ class SuggestionListResource(Resource):
         suggestion.save()
         resp = suggestion_schema.dump(suggestion)
         return resp, 201
+    
+    
+class SuggestionResource(Resource):
+    def _suggestion_validation(self, suggestion_id):
+        suggestion = Suggestion.get_by_id(suggestion_id)
+        if suggestion is None:
+            raise ObjectNotFound('The suggestion does not exist')
+        
+        return suggestion
+    
+    def get(self, suggestion_id):
+        suggestion = self._suggestion_validation(suggestion_id)
+        resp = suggestion_schema.dump(suggestion)
+        return resp
+    
+    def put(self, suggestion_id):
+        suggestion = self._suggestion_validation(suggestion_id)
+
+        data = request.get_json()
+        suggestion.word = data['word']
+        suggestion.meaning = data['meaning']
+        suggestion.category_id = data['category_id']
+        suggestion.user_id = data['user_id']
+        suggestion.punctuation = data['punctuation']
+        suggestion.update()
+        
+        resp = suggestion_schema.dump(suggestion)
+        return resp
+    
+    def delete(self, suggestion_id):
+        suggestion = self._suggestion_validation(suggestion_id)
+        suggestion.delete()
+        return {"message": "Suggestion deleted"}
 
 
 api.add_resource(SuggestionListResource, '/api/suggestions/', endpoint='suggestion_list_resource')
+api.add_resource(SuggestionResource, '/api/suggestions/<int:suggestion_id>', endpoint='suggestion_resource')

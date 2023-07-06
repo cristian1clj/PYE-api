@@ -21,7 +21,7 @@ class Word(db.Model, BaseModelMixin):
     
     @classmethod
     def get_random(cls, category_id):
-        return cls.query.filter_by(category_id=category_id).all().order_by(db.func.random()).first()
+        return cls.query.filter_by(category_id=category_id).order_by(db.func.random()).first()
 
 
 class Meaning(db.Model, BaseModelMixin):

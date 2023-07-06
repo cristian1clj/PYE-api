@@ -56,7 +56,7 @@ class WordResource(Resource):
         
         data = request.get_json()
         word.word = data['word']
-        word.meanings = data['meaning']
+        word.meanings = [Meaning(meaning['meaning']) for meaning in data['meanings']]
         word.category_id = data['category_id']
         word.update()
         
@@ -66,7 +66,7 @@ class WordResource(Resource):
     def delete(self, word_id):
         word = self._word_validation(word_id)
         word.delete()
-        return {"message": "Word deleted"}, 204
+        return {"message": "Word deleted"}
 
 
 class WordRandomResource(Resource):
@@ -77,5 +77,5 @@ class WordRandomResource(Resource):
 
 
 api.add_resource(WordListResource, '/api/vocabulary/', endpoint='word_list_resource')
-api.add_resource(WordResource, 'api/vocabulary/word/<int:word_id>', endpoint='word_resource')
+api.add_resource(WordResource, '/api/vocabulary/word/<int:word_id>', endpoint='word_resource')
 api.add_resource(WordRandomResource, '/api/vocabulary/category/<int:category_id>/random', endpoint='word_random_resource')

@@ -11,3 +11,7 @@ class Difficulty(db.Model, BaseModelMixin):
         self.user_id = user_id
         self.word_id = word_id
         self.difficulty_level = difficulty_level
+    
+    @classmethod
+    def get_difficulty(cls, user_id, word_id):
+        return cls.query.filter_by(user_id=user_id, word_id=word_id).first()
