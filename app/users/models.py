@@ -21,6 +21,6 @@ class User(db.Model, BaseModelMixin):
     
     def __str__(self):
         return f'{self.username}'
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)

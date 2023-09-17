@@ -6,6 +6,7 @@ from app.db import db
 from app.vocabulary.words.resources import words_bp
 from app.vocabulary.difficulty.resources import difficulty_bp
 from app.users.resources import users_bp
+from app.auth.resources import auth_bp
 from app.suggestions.resources import suggestions_bp
 from app.categories.resources import categories_bp
 from app.ext import ma, migrate
@@ -26,6 +27,7 @@ def create_app(settings_module):
     app.register_blueprint(words_bp)
     app.register_blueprint(difficulty_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(suggestions_bp)
     register_error_handlers(app)
