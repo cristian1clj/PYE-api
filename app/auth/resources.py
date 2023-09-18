@@ -1,11 +1,11 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 
-from ..common.error_handling import ObjectNotFound
+from ..common.error_handling import ObjectNotFound, Unauthorized, Conflict
 from ..users.schemas import UserSchema
 from ..users.models import User
 from .schemas import LoginInputSchema, LoginOutputSchema
-from .utils import LoginAuthentication, TokenGenerator
+from .utils import UserDataAuthentication, TokenGenerator
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -23,6 +23,11 @@ class RegistrationResource(Resource):
             password=user_dict['password'],
             email=user_dict['email']
         )
+        
+        existing_email = UserDataAuthentication.check_email_exists(user.email)
+        if existing_email:
+            raise Conflict('Email already exists')
+        
         user.save()
         resp = user_schema.dump(user)
         return resp, 201
@@ -37,7 +42,7 @@ class AuthenticationResource(Resource):
         email = account_dict.get('email')
         password = account_dict.get('password')
         
-        user = LoginAuthentication.check_user_exists(email)
+        user = UserDataAuthentication.check_email_exists(email)
         if user is None:
             raise ObjectNotFound("User not found")
         
@@ -46,5 +51,28 @@ class AuthenticationResource(Resource):
             resp = { "token": token }
             return resp
         
+        else:
+            raise Unauthorized('Invalid password')
 
+
+class ActiveSessionResource(Resource):
+    def get(self):
+        token = request.headers.get('Authorization')
+        if not token:
+            raise Unauthorized('Token not provided')
+        
+        token = token.replace('Bearer ', '')
+        
+        user = TokenGenerator.decode_token(token)
+        if not user:
+            raise Unauthorized('Invalid token')
+        
+        user_info = {
+            'id': user['id']
+        }
+        return user_info, 200
+
+
+api.add_resource(RegistrationResource, '/api/auth/signup', endpoint='registration_resource')
 api.add_resource(AuthenticationResource, '/api/auth/login', endpoint='authentication_resource')
+api.add_resource(ActiveSessionResource, '/api/auth/session', endpoint='active_session_resource')

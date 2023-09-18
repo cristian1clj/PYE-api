@@ -6,9 +6,9 @@ from ..users.models import User
 from config.default import SECRET_KEY
 
 
-class LoginAuthentication:
+class UserDataAuthentication:
     @staticmethod
-    def check_user_exists(email):
+    def check_email_exists(email):
         return User.query.filter_by(email=email).first()
 
 
