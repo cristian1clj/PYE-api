@@ -1,7 +1,7 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 
-from ...common.error_handling import ObjectNotFound
+from ...common.error_handling import ObjectNotFound, Conflict
 from ...categories.models import Category
 from .schemas import WordSchema
 from .models import Word, Meaning
@@ -33,6 +33,11 @@ class WordListResource(Resource):
             meanings=[Meaning(meaning['meaning']) for meaning in word_dict['meanings']],
             category_id=category_id
         )
+        
+        existing_word = Word.simple_filter(word=word.word)
+        if existing_word:
+            raise Conflict('Word already exists')
+        
         word.save()
         resp = word_schema.dump(word)
         return resp, 201

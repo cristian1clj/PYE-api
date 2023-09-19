@@ -1,7 +1,7 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 
-from ...common.error_handling import ObjectNotFound
+from ...common.error_handling import ObjectNotFound, Conflict
 from .schemas import DifficultySchema
 from .models import Difficulty
 from ...users.models import User
@@ -39,6 +39,11 @@ class DifficultyListResource(Resource):
             user_id=difficulty_dict['user_id'],
             difficulty_level=difficulty_dict['difficulty_level']
         )
+        
+        existing_difficulty = Difficulty.get_difficulty(difficulty.user_id, difficulty.word_id)
+        if existing_difficulty:
+            raise Conflict('Difficulty already exists')
+        
         difficulty.save()
         resp = difficulty_schema.dump(difficulty)
         return resp, 201
@@ -77,7 +82,7 @@ class DifficultyResource(Resource):
     def delete(self, user_id, word_id):
         difficulty = self._validate_user_word_difficulty(user_id, word_id)
         difficulty.delete()
-        return {"message": "Difficulty deleted"}, 204
+        return {"message": "Difficulty deleted"}
     
 
 api.add_resource(DifficultyListResource, '/api/vocabulary/difficulty/', endpoint='difficulty_list_resource')

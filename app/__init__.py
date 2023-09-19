@@ -1,11 +1,12 @@
 from flask import Flask, jsonify
 from flask_restful import Api
 
-from app.common.error_handling import ObjectNotFound, AppErrorBaseClass
+from app.common.error_handling import *
 from app.db import db
 from app.vocabulary.words.resources import words_bp
 from app.vocabulary.difficulty.resources import difficulty_bp
 from app.users.resources import users_bp
+from app.auth.resources import auth_bp
 from app.suggestions.resources import suggestions_bp
 from app.categories.resources import categories_bp
 from app.ext import ma, migrate
@@ -26,6 +27,7 @@ def create_app(settings_module):
     app.register_blueprint(words_bp)
     app.register_blueprint(difficulty_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(suggestions_bp)
     register_error_handlers(app)
@@ -50,10 +52,22 @@ def register_error_handlers(app):
     def handle_404_error(e):
         return jsonify({'msg': 'Not found error'}), 404
     
+    @app.errorhandler(401)
+    def handle_401_error(e):
+        return jsonify({'msg': 'Unauthorized error'}), 401
+    
     @app.errorhandler(AppErrorBaseClass)
     def handle_app_base_error(e):
         return jsonify({'msg': str(e)}), 500
     
+    @app.errorhandler(Conflict)
+    def handle_conflict_error(e):
+        return jsonify({'msg': str(e)}), 409
+    
     @app.errorhandler(ObjectNotFound)
     def handle_object_not_found_error(e):
         return jsonify({'msg': str(e)}), 404
+    
+    @app.errorhandler(Unauthorized)
+    def handle_unauthorized_error(e):
+        return jsonify({'msg': str(e)}), 401

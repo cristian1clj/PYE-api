@@ -1,6 +1,7 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 
+from ..common.error_handling import Conflict
 from .schemas import CategorySchema
 from .models import Category
 
@@ -23,6 +24,11 @@ class CategoryListResource(Resource):
         category = Category(
             name=category_dict['name']
         )
+        
+        existing_category = Category.simple_filter(name=category.name)
+        if existing_category:
+            raise Conflict('Category already exists')
+        
         category.save()
         resp = category_schema.dump(category)
         return resp, 201
