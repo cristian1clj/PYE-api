@@ -4,7 +4,7 @@ from flask_restful import Api, Resource
 from ..common.error_handling import ObjectNotFound, Unauthorized, Conflict
 from ..users.schemas import UserSchema
 from ..users.models import User
-from .schemas import LoginInputSchema, LoginOutputSchema
+from .schemas import LoginInputSchema
 from .utils import UserDataAuthentication, TokenGenerator
 
 auth_bp = Blueprint('auth_bp', __name__)

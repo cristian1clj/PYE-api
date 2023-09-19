@@ -10,4 +10,3 @@ class LoginInputSchema(ma.Schema):
 
 class LoginOutputSchema(ma.Schema):
     id = fields.Int(required=True)
-    token = fields.String(required=True)
