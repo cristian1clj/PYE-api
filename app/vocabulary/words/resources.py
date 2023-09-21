@@ -3,6 +3,7 @@ from flask_restful import Api, Resource
 
 from ...common.error_handling import ObjectNotFound, Conflict
 from ...categories.models import Category
+from ...auth.utils import jwt_required
 from .schemas import WordSchema
 from .models import Word, Meaning
 
@@ -14,11 +15,13 @@ api = Api(words_bp)
 
 
 class WordListResource(Resource):
+    
     def get(self):
         words = Word.get_all()
         result = word_schema.dump(words, many=True)
         return result
     
+    @jwt_required
     def post(self):
         data = request.get_json()
         word_dict = word_schema.load(data)
@@ -44,6 +47,7 @@ class WordListResource(Resource):
 
 
 class WordResource(Resource):
+    
     def _word_validation(self, word_id):
         word = Word.get_by_id(word_id)
         if word is None:
@@ -51,11 +55,13 @@ class WordResource(Resource):
         
         return word
     
+    @jwt_required
     def get(self, word_id):
         word = self._word_validation(word_id)
         resp = word_schema.dump(word)
         return resp
     
+    @jwt_required
     def put(self, word_id):
         word = self._word_validation(word_id)
         
@@ -68,6 +74,7 @@ class WordResource(Resource):
         resp = word_schema.dump(word)
         return resp
     
+    @jwt_required
     def delete(self, word_id):
         word = self._word_validation(word_id)
         word.delete()
@@ -75,6 +82,8 @@ class WordResource(Resource):
 
 
 class WordRandomResource(Resource):
+    
+    @jwt_required
     def get(self, category_id):
         word = Word.get_random(category_id)
         result = word_schema.dump(word)

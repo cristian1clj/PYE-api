@@ -2,6 +2,7 @@ from flask import request, Blueprint
 from flask_restful import Api, Resource
 
 from ..common.error_handling import Conflict
+from ..auth.utils import jwt_required
 from .schemas import CategorySchema
 from .models import Category
 
@@ -13,11 +14,13 @@ api = Api(categories_bp)
 
 
 class CategoryListResource(Resource):
+    
     def get(self):
         categories = Category.get_all()
         result = category_schema.dump(categories, many=True)
         return result
     
+    @jwt_required
     def post(self):
         data = request.get_json()
         category_dict = category_schema.load(data)

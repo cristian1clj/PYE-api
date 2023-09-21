@@ -4,6 +4,7 @@ from flask import request, Blueprint
 from flask_restful import Api, Resource
 
 from ..common.error_handling import ObjectNotFound
+from ..auth.utils import DataAuthentication, jwt_required
 from .schemas import SuggestionSchema
 from .models import Suggestion
 from ..categories.models import Category
@@ -17,24 +18,28 @@ api = Api(suggestions_bp)
 
 
 class SuggestionListResource(Resource):
+    
+    @jwt_required
     def get(self):
         suggestions = Suggestion.get_all()
         result = suggestion_schema.dump(suggestions, many=True)
         return result
     
-    def post(self):
+    @jwt_required
+    def post(self, current_user):
         data = request.get_json()
         suggestion_dict = suggestion_schema.load(data, partial=True)
+        
+        user_id = suggestion_dict.get('user_id')
+        DataAuthentication.check_access_by_id(user_id, current_user['id'])
+        user = User.get_by_id(user_id)
+        if user is None:
+            raise ObjectNotFound('The user does not exist')
         
         category_id = suggestion_dict.get('category_id')
         category = Category.get_by_id(category_id)
         if category is None:
             raise ObjectNotFound('The category does not exist')
-        
-        user_id = suggestion_dict.get('user_id')
-        user = User.get_by_id(user_id)
-        if user is None:
-            raise ObjectNotFound('The user does not exist')
         
         suggestion = Suggestion(
             word=suggestion_dict['word'],
@@ -50,6 +55,7 @@ class SuggestionListResource(Resource):
     
     
 class SuggestionResource(Resource):
+    
     def _suggestion_validation(self, suggestion_id):
         suggestion = Suggestion.get_by_id(suggestion_id)
         if suggestion is None:
@@ -57,14 +63,17 @@ class SuggestionResource(Resource):
         
         return suggestion
     
+    @jwt_required
     def get(self, suggestion_id):
         suggestion = self._suggestion_validation(suggestion_id)
         resp = suggestion_schema.dump(suggestion)
         return resp
     
-    def put(self, suggestion_id):
+    @jwt_required
+    def put(self, suggestion_id, current_user):
         suggestion = self._suggestion_validation(suggestion_id)
-
+        DataAuthentication.check_access_by_id(suggestion.user_id, current_user['id'])
+        
         data = request.get_json()
         suggestion.word = data['word']
         suggestion.meaning = data['meaning']
@@ -76,8 +85,10 @@ class SuggestionResource(Resource):
         resp = suggestion_schema.dump(suggestion)
         return resp
     
-    def delete(self, suggestion_id):
+    @jwt_required
+    def delete(self, suggestion_id, current_user):
         suggestion = self._suggestion_validation(suggestion_id)
+        DataAuthentication.check_access_by_id(suggestion.user_id, current_user['id'])
         suggestion.delete()
         return {"message": "Suggestion deleted"}
 
