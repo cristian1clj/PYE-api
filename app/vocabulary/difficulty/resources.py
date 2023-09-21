@@ -2,6 +2,7 @@ from flask import request, Blueprint
 from flask_restful import Api, Resource
 
 from ...common.error_handling import ObjectNotFound, Conflict
+from ...auth.utils import DataAuthentication, jwt_required
 from .schemas import DifficultySchema
 from .models import Difficulty
 from ...users.models import User
@@ -15,25 +16,29 @@ api = Api(difficulty_bp)
 
 
 class DifficultyListResource(Resource):
+    
+    @jwt_required
     def get(self):
         words = Difficulty.get_all()
         result = difficulty_schema.dump(words, many=True)
         return result
     
-    def post(self):
+    @jwt_required
+    def post(self, current_user):
         data = request.get_json()
         difficulty_dict = difficulty_schema.load(data)
+        
+        user_id = difficulty_dict.get('user_id')
+        DataAuthentication.check_access_by_id(user_id, current_user['id'])
+        user = User.get_by_id(user_id)
+        if user is None:
+            raise ObjectNotFound('The user does not exist')
         
         word_id = difficulty_dict.get('word_id')
         word = Word.get_by_id(word_id)
         if word is None:
             raise ObjectNotFound('The word does not exist')
-        
-        user_id = difficulty_dict.get('user_id')
-        user = User.get_by_id(user_id)
-        if user is None:
-            raise ObjectNotFound('The user does not exist')
-        
+
         difficulty = Difficulty(
             word_id=difficulty_dict['word_id'],
             user_id=difficulty_dict['user_id'],
@@ -50,7 +55,9 @@ class DifficultyListResource(Resource):
 
 
 class DifficultyResource(Resource):
-    def _validate_user_word_difficulty(self, user_id, word_id):
+    def _validate_user_word_difficulty(self, user_id, word_id, current_id):
+        DataAuthentication.check_access_by_id(user_id, current_id)
+        
         user = User.get_by_id(user_id)
         if user is None:
             raise ObjectNotFound('The user does not exist')
@@ -64,13 +71,15 @@ class DifficultyResource(Resource):
         
         return difficulty
     
-    def get(self, user_id, word_id):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id)
+    @jwt_required
+    def get(self, user_id, word_id, current_user):
+        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
         result = difficulty_schema.dump(difficulty)
         return result
     
-    def put(self, user_id, word_id):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id)
+    @jwt_required
+    def put(self, user_id, word_id, current_user):
+        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
 
         data = request.get_json()
         difficulty.difficulty_level = data['difficulty_level']
@@ -79,8 +88,9 @@ class DifficultyResource(Resource):
         resp = difficulty_schema.dump(difficulty)
         return resp
     
-    def delete(self, user_id, word_id):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id)
+    @jwt_required
+    def delete(self, user_id, word_id, current_user):
+        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
         difficulty.delete()
         return {"message": "Difficulty deleted"}
     

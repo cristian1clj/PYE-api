@@ -5,7 +5,7 @@ from ..common.error_handling import ObjectNotFound, Unauthorized, Conflict
 from ..users.schemas import UserSchema
 from ..users.models import User
 from .schemas import LoginInputSchema
-from .utils import UserDataAuthentication, TokenGenerator
+from .utils import DataAuthentication, TokenGenerator
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -24,7 +24,7 @@ class RegistrationResource(Resource):
             email=user_dict['email']
         )
         
-        existing_email = UserDataAuthentication.check_email_exists(user.email)
+        existing_email = DataAuthentication.check_email_exists(user.email)
         if existing_email:
             raise Conflict('Email already exists')
         
@@ -42,7 +42,7 @@ class AuthenticationResource(Resource):
         email = account_dict.get('email')
         password = account_dict.get('password')
         
-        user = UserDataAuthentication.check_email_exists(email)
+        user = DataAuthentication.check_email_exists(email)
         if user is None:
             raise ObjectNotFound("User not found")
         
