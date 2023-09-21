@@ -13,40 +13,41 @@ api = Api(auth_bp)
 
 
 class RegistrationResource(Resource):
+    
     def post(self):
         user_schema = UserSchema()
         
         data = request.get_json()
         user_dict = user_schema.load(data)
+        
+        existing_email = DataAuthentication.check_email_exists(user_dict['email'])
+        if existing_email:
+            raise Conflict('Email already exists')
+        
         user = User(
             username=user_dict['username'],
             password=user_dict['password'],
             email=user_dict['email']
         )
-        
-        existing_email = DataAuthentication.check_email_exists(user.email)
-        if existing_email:
-            raise Conflict('Email already exists')
-        
         user.save()
+        
         resp = user_schema.dump(user)
         return resp, 201
 
 
 class AuthenticationResource(Resource):
+    
     def post(self):
         login_input_schema = LoginInputSchema()
         
         data = request.get_json()
         account_dict = login_input_schema.load(data)
-        email = account_dict.get('email')
-        password = account_dict.get('password')
         
-        user = DataAuthentication.check_email_exists(email)
+        user = DataAuthentication.check_email_exists(account_dict['email'])
         if user is None:
             raise ObjectNotFound("User not found")
         
-        if user.check_password(password):
+        if user.check_password(account_dict['password']):
             token = TokenGenerator.encode_token(user)
             resp = { "token": token }
             return resp
@@ -56,21 +57,14 @@ class AuthenticationResource(Resource):
 
 
 class ActiveSessionResource(Resource):
+    
     def get(self):
-        token = request.headers.get('Authorization')
-        if not token:
-            raise Unauthorized('Token not provided')
-        
-        token = token.replace('Bearer ', '')
-        
-        user = TokenGenerator.decode_token(token)
-        if not user:
-            raise Unauthorized('Invalid token')
-        
-        user_info = {
-            'id': user['id']
-        }
-        return user_info, 200
+        try:
+            token = request.headers.get('Authorization')
+            token = token.replace('Bearer ', '')
+            return TokenGenerator.check_token(token)
+        except:
+            return False
 
 
 api.add_resource(RegistrationResource, '/api/auth/signup', endpoint='registration_resource')

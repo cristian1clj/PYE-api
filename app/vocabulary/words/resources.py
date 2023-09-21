@@ -26,22 +26,21 @@ class WordListResource(Resource):
         data = request.get_json()
         word_dict = word_schema.load(data)
         
-        category_id = word_dict.get('category_id')
-        category = Category.get_by_id(category_id)
+        existing_word = Word.simple_filter(word=word_dict['word'])
+        if existing_word:
+            raise Conflict('Word already exists')
+        
+        category = Category.get_by_id(word_dict['category_id'])
         if category is None:
             raise ObjectNotFound('The category does not exist')
         
         word = Word(
             word=word_dict['word'],
             meanings=[Meaning(meaning['meaning']) for meaning in word_dict['meanings']],
-            category_id=category_id
+            category_id=word_dict['category_id']
         )
-        
-        existing_word = Word.simple_filter(word=word.word)
-        if existing_word:
-            raise Conflict('Word already exists')
-        
         word.save()
+        
         resp = word_schema.dump(word)
         return resp, 201
 
@@ -66,9 +65,11 @@ class WordResource(Resource):
         word = self._word_validation(word_id)
         
         data = request.get_json()
-        word.word = data['word']
-        word.meanings = [Meaning(meaning['meaning']) for meaning in data['meanings']]
-        word.category_id = data['category_id']
+        word_dict = word_schema.load(data)
+        
+        word.word = word_dict['word']
+        word.meanings = [Meaning(meaning['meaning']) for meaning in word_dict['meanings']]
+        word.category_id = word_dict['category_id']
         word.update()
         
         resp = word_schema.dump(word)
@@ -85,6 +86,10 @@ class WordRandomResource(Resource):
     
     @jwt_required
     def get(self, category_id):
+        category = Category.get_by_id(category_id)
+        if category is None:
+            raise ObjectNotFound('The category does not exist')
+        
         word = Word.get_random(category_id)
         result = word_schema.dump(word)
         return result

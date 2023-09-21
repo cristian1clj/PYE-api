@@ -26,6 +26,7 @@ class UserResource(Resource):
     
     def _user_validation(self, user_id, current_id):
         DataAuthentication.check_access_by_id(user_id, current_id)
+        
         user = User.get_by_id(user_id)
         if user is None:
             raise ObjectNotFound("User not found")
@@ -43,6 +44,7 @@ class UserResource(Resource):
         user = self._user_validation(user_id, current_user['id'])
 
         data = request.get_json()
+        # user_dict = user_schema.load(data)
         user.username = data['username']
         user.email = data['email']
         user.update()

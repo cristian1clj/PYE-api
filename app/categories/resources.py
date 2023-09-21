@@ -24,15 +24,16 @@ class CategoryListResource(Resource):
     def post(self):
         data = request.get_json()
         category_dict = category_schema.load(data)
-        category = Category(
-            name=category_dict['name']
-        )
         
-        existing_category = Category.simple_filter(name=category.name)
+        existing_category = Category.simple_filter(name=category_dict['name'])
         if existing_category:
             raise Conflict('Category already exists')
         
+        category = Category(
+            name=category_dict['name']
+        )
         category.save()
+        
         resp = category_schema.dump(category)
         return resp, 201
 

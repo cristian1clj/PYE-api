@@ -28,28 +28,33 @@ class DifficultyListResource(Resource):
         data = request.get_json()
         difficulty_dict = difficulty_schema.load(data)
         
-        user_id = difficulty_dict.get('user_id')
-        DataAuthentication.check_access_by_id(user_id, current_user['id'])
-        user = User.get_by_id(user_id)
+        DataAuthentication.check_access_by_id(
+            difficulty_dict['user_id'], 
+            current_user['id']
+            )
+        
+        user = User.get_by_id(difficulty_dict['user_id'])
         if user is None:
             raise ObjectNotFound('The user does not exist')
         
-        word_id = difficulty_dict.get('word_id')
-        word = Word.get_by_id(word_id)
+        word = Word.get_by_id(difficulty_dict['word_id'])
         if word is None:
             raise ObjectNotFound('The word does not exist')
+        
+        existing_difficulty = Difficulty.get_difficulty(
+            difficulty_dict['user_id'], 
+            difficulty_dict['word_id']
+            )
+        if existing_difficulty:
+            raise Conflict('Difficulty already exists')
 
         difficulty = Difficulty(
             word_id=difficulty_dict['word_id'],
             user_id=difficulty_dict['user_id'],
             difficulty_level=difficulty_dict['difficulty_level']
         )
-        
-        existing_difficulty = Difficulty.get_difficulty(difficulty.user_id, difficulty.word_id)
-        if existing_difficulty:
-            raise Conflict('Difficulty already exists')
-        
         difficulty.save()
+        
         resp = difficulty_schema.dump(difficulty)
         return resp, 201
 
@@ -61,6 +66,7 @@ class DifficultyResource(Resource):
         user = User.get_by_id(user_id)
         if user is None:
             raise ObjectNotFound('The user does not exist')
+        
         word = Word.get_by_id(word_id)
         if word is None:
             raise ObjectNotFound('The word does not exist')
@@ -73,15 +79,25 @@ class DifficultyResource(Resource):
     
     @jwt_required
     def get(self, user_id, word_id, current_user):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
+        difficulty = self._validate_user_word_difficulty(
+            user_id, 
+            word_id, 
+            current_user['id']
+            )
+        
         result = difficulty_schema.dump(difficulty)
         return result
     
     @jwt_required
     def put(self, user_id, word_id, current_user):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
+        difficulty = self._validate_user_word_difficulty(
+            user_id, 
+            word_id, 
+            current_user['id']
+            )
 
         data = request.get_json()
+        # difficulty_dict = difficulty_schema.load(data)
         difficulty.difficulty_level = data['difficulty_level']
         difficulty.update()
         
@@ -90,7 +106,11 @@ class DifficultyResource(Resource):
     
     @jwt_required
     def delete(self, user_id, word_id, current_user):
-        difficulty = self._validate_user_word_difficulty(user_id, word_id, current_user['id'])
+        difficulty = self._validate_user_word_difficulty(
+            user_id, 
+            word_id, 
+            current_user['id']
+            )
         difficulty.delete()
         return {"message": "Difficulty deleted"}
     
