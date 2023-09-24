@@ -6,35 +6,36 @@ from ..auth.utils import jwt_required
 from .schemas import CategorySchema
 from .models import Category
 
-categories_bp = Blueprint('categories_bp', __name__)
+CATEGORIES_BP = Blueprint('categories_bp', __name__)
 
-category_schema = CategorySchema()
+CATEGORY_SCHEMA = CategorySchema()
 
-api = Api(categories_bp)
+API = Api(CATEGORIES_BP)
 
 
 class CategoryListResource(Resource):
     
     def get(self):
         categories = Category.get_all()
-        result = category_schema.dump(categories, many=True)
+        result = CATEGORY_SCHEMA.dump(categories, many=True)
         return result
     
     @jwt_required
     def post(self):
         data = request.get_json()
-        category_dict = category_schema.load(data)
-        category = Category(
-            name=category_dict['name']
-        )
+        category_dict = CATEGORY_SCHEMA.load(data)
         
-        existing_category = Category.simple_filter(name=category.name)
+        existing_category = Category.simple_filter(name=category_dict['name'])
         if existing_category:
             raise Conflict('Category already exists')
         
+        category = Category(
+            name=category_dict['name']
+        )
         category.save()
-        resp = category_schema.dump(category)
+        
+        resp = CATEGORY_SCHEMA.dump(category)
         return resp, 201
 
 
-api.add_resource(CategoryListResource, '/api/categories/', endpoint='category_list_resource')
+API.add_resource(CategoryListResource, '/api/categories/', endpoint='category_list_resource')

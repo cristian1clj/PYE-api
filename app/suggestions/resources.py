@@ -10,11 +10,11 @@ from .models import Suggestion
 from ..categories.models import Category
 from ..users.models import User
 
-suggestions_bp = Blueprint('suggestions_bp', __name__)
+SUGGESTIONS_BP = Blueprint('suggestions_bp', __name__)
 
-suggestion_schema = SuggestionSchema()
+SUGGESTION_SCHEMA = SuggestionSchema()
 
-api = Api(suggestions_bp)
+API = Api(SUGGESTIONS_BP)
 
 
 class SuggestionListResource(Resource):
@@ -22,35 +22,38 @@ class SuggestionListResource(Resource):
     @jwt_required
     def get(self):
         suggestions = Suggestion.get_all()
-        result = suggestion_schema.dump(suggestions, many=True)
+        result = SUGGESTION_SCHEMA.dump(suggestions, many=True)
         return result
     
     @jwt_required
     def post(self, current_user):
         data = request.get_json()
-        suggestion_dict = suggestion_schema.load(data, partial=True)
+        suggestion_dict = SUGGESTION_SCHEMA.load(data, partial=True)
         
-        user_id = suggestion_dict.get('user_id')
-        DataAuthentication.check_access_by_id(user_id, current_user['id'])
-        user = User.get_by_id(user_id)
+        DataAuthentication.check_access_by_id(
+            suggestion_dict['user_id'], 
+            current_user['id']
+            )
+        
+        user = User.get_by_id(suggestion_dict['user_id'])
         if user is None:
             raise ObjectNotFound('The user does not exist')
         
-        category_id = suggestion_dict.get('category_id')
-        category = Category.get_by_id(category_id)
+        category = Category.get_by_id(suggestion_dict['category_id'])
         if category is None:
             raise ObjectNotFound('The category does not exist')
         
         suggestion = Suggestion(
             word=suggestion_dict['word'],
             meaning=suggestion_dict['meaning'],
-            category_id=category_id,
-            user_id=user_id,
+            category_id=suggestion_dict['category_id'],
+            user_id=suggestion_dict['user_id'],
             punctuation=0,
             date_suggestion=datetime.now()
         )
         suggestion.save()
-        resp = suggestion_schema.dump(suggestion)
+        
+        resp = SUGGESTION_SCHEMA.dump(suggestion)
         return resp, 201
     
     
@@ -66,23 +69,34 @@ class SuggestionResource(Resource):
     @jwt_required
     def get(self, suggestion_id):
         suggestion = self._suggestion_validation(suggestion_id)
-        resp = suggestion_schema.dump(suggestion)
+        resp = SUGGESTION_SCHEMA.dump(suggestion)
         return resp
     
     @jwt_required
     def put(self, suggestion_id, current_user):
         suggestion = self._suggestion_validation(suggestion_id)
+        
         DataAuthentication.check_access_by_id(suggestion.user_id, current_user['id'])
         
         data = request.get_json()
-        suggestion.word = data['word']
-        suggestion.meaning = data['meaning']
-        suggestion.category_id = data['category_id']
-        suggestion.user_id = data['user_id']
-        suggestion.punctuation = data['punctuation']
+        suggestion_dict = SUGGESTION_SCHEMA.load(data)
+        
+        user = User.get_by_id(suggestion_dict['user_id'])
+        if user is None:
+            raise ObjectNotFound('The user does not exist')
+        
+        category = Category.get_by_id(suggestion_dict['category_id'])
+        if category is None:
+            raise ObjectNotFound('The category does not exist')
+        
+        suggestion.word = suggestion_dict['word']
+        suggestion.meaning = suggestion_dict['meaning']
+        suggestion.category_id = suggestion_dict['category_id']
+        suggestion.user_id = suggestion_dict['user_id']
+        suggestion.punctuation = suggestion_dict['punctuation']
         suggestion.update()
         
-        resp = suggestion_schema.dump(suggestion)
+        resp = SUGGESTION_SCHEMA.dump(suggestion)
         return resp
     
     @jwt_required
@@ -93,5 +107,5 @@ class SuggestionResource(Resource):
         return {"message": "Suggestion deleted"}
 
 
-api.add_resource(SuggestionListResource, '/api/suggestions/', endpoint='suggestion_list_resource')
-api.add_resource(SuggestionResource, '/api/suggestions/<int:suggestion_id>', endpoint='suggestion_resource')
+API.add_resource(SuggestionListResource, '/api/suggestions/', endpoint='suggestion_list_resource')
+API.add_resource(SuggestionResource, '/api/suggestions/<int:suggestion_id>', endpoint='suggestion_resource')

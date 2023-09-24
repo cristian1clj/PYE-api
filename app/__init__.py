@@ -3,12 +3,12 @@ from flask_restful import Api
 
 from app.common.error_handling import *
 from app.db import db
-from app.vocabulary.words.resources import words_bp
-from app.vocabulary.difficulty.resources import difficulty_bp
-from app.users.resources import users_bp
-from app.auth.resources import auth_bp
-from app.suggestions.resources import suggestions_bp
-from app.categories.resources import categories_bp
+from app.vocabulary.words.resources import WORDS_BP
+from app.vocabulary.difficulty.resources import DIFFICULTY_BP
+from app.users.resources import USERS_BP
+from app.auth.resources import AUTH_BP
+from app.suggestions.resources import SUGGESTIONS_BP
+from app.categories.resources import CATEGORIES_BP
 from app.ext import ma, migrate
 
 
@@ -24,12 +24,12 @@ def create_app(settings_module):
     Api(app, catch_all_404s=True)
     
     app.url_map.strict_slashes = False
-    app.register_blueprint(words_bp)
-    app.register_blueprint(difficulty_bp)
-    app.register_blueprint(users_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(categories_bp)
-    app.register_blueprint(suggestions_bp)
+    app.register_blueprint(WORDS_BP)
+    app.register_blueprint(DIFFICULTY_BP)
+    app.register_blueprint(USERS_BP)
+    app.register_blueprint(AUTH_BP)
+    app.register_blueprint(CATEGORIES_BP)
+    app.register_blueprint(SUGGESTIONS_BP)
     register_error_handlers(app)
     
     return app
