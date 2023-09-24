@@ -7,24 +7,24 @@ from ...auth.utils import jwt_required
 from .schemas import WordSchema
 from .models import Word, Meaning
 
-words_bp = Blueprint('words_bp', __name__)
+WORDS_BP = Blueprint('words_bp', __name__)
 
-word_schema = WordSchema()
+WORD_SCHEMA = WordSchema()
 
-api = Api(words_bp)
+API = Api(WORDS_BP)
 
 
 class WordListResource(Resource):
     
     def get(self):
         words = Word.get_all()
-        result = word_schema.dump(words, many=True)
+        result = WORD_SCHEMA.dump(words, many=True)
         return result
     
     @jwt_required
     def post(self):
         data = request.get_json()
-        word_dict = word_schema.load(data)
+        word_dict = WORD_SCHEMA.load(data)
         
         existing_word = Word.simple_filter(word=word_dict['word'])
         if existing_word:
@@ -41,7 +41,7 @@ class WordListResource(Resource):
         )
         word.save()
         
-        resp = word_schema.dump(word)
+        resp = WORD_SCHEMA.dump(word)
         return resp, 201
 
 
@@ -57,7 +57,7 @@ class WordResource(Resource):
     @jwt_required
     def get(self, word_id):
         word = self._word_validation(word_id)
-        resp = word_schema.dump(word)
+        resp = WORD_SCHEMA.dump(word)
         return resp
     
     @jwt_required
@@ -65,14 +65,14 @@ class WordResource(Resource):
         word = self._word_validation(word_id)
         
         data = request.get_json()
-        word_dict = word_schema.load(data)
+        word_dict = WORD_SCHEMA.load(data)
         
         word.word = word_dict['word']
         word.meanings = [Meaning(meaning['meaning']) for meaning in word_dict['meanings']]
         word.category_id = word_dict['category_id']
         word.update()
         
-        resp = word_schema.dump(word)
+        resp = WORD_SCHEMA.dump(word)
         return resp
     
     @jwt_required
@@ -91,10 +91,10 @@ class WordRandomResource(Resource):
             raise ObjectNotFound('The category does not exist')
         
         word = Word.get_random(category_id)
-        result = word_schema.dump(word)
+        result = WORD_SCHEMA.dump(word)
         return result
 
 
-api.add_resource(WordListResource, '/api/vocabulary/', endpoint='word_list_resource')
-api.add_resource(WordResource, '/api/vocabulary/word/<int:word_id>', endpoint='word_resource')
-api.add_resource(WordRandomResource, '/api/vocabulary/category/<int:category_id>/random', endpoint='word_random_resource')
+API.add_resource(WordListResource, '/api/vocabulary/', endpoint='word_list_resource')
+API.add_resource(WordResource, '/api/vocabulary/word/<int:word_id>', endpoint='word_resource')
+API.add_resource(WordRandomResource, '/api/vocabulary/category/<int:category_id>/random', endpoint='word_random_resource')

@@ -6,11 +6,11 @@ from ..auth.utils import DataAuthentication, jwt_required
 from .schemas import UserSchema
 from .models import User
 
-users_bp = Blueprint('users_bp', __name__)
+USERS_BP = Blueprint('users_bp', __name__)
 
-user_schema = UserSchema()
+USER_SCHEMA = UserSchema()
 
-api = Api(users_bp)
+API = Api(USERS_BP)
 
 
 class UserListResource(Resource):
@@ -18,7 +18,7 @@ class UserListResource(Resource):
     @jwt_required
     def get(self):
         users = User.get_all()
-        result = user_schema.dump(users, many=True)
+        result = USER_SCHEMA.dump(users, many=True)
         return result
 
 
@@ -36,7 +36,7 @@ class UserResource(Resource):
     @jwt_required
     def get(self, user_id, current_user):
         user = self._user_validation(user_id, current_user['id'])
-        resp = user_schema.dump(user)
+        resp = USER_SCHEMA.dump(user)
         return resp
     
     @jwt_required
@@ -44,12 +44,12 @@ class UserResource(Resource):
         user = self._user_validation(user_id, current_user['id'])
 
         data = request.get_json()
-        # user_dict = user_schema.load(data)
+        # user_dict = USER_SCHEMA.load(data)
         user.username = data['username']
         user.email = data['email']
         user.update()
         
-        resp = user_schema.dump(user)
+        resp = USER_SCHEMA.dump(user)
         return resp
     
     @jwt_required
@@ -59,5 +59,5 @@ class UserResource(Resource):
         return {"message": "User deleted"}
 
 
-api.add_resource(UserListResource, '/api/users/', endpoint='user_list_resource')
-api.add_resource(UserResource, '/api/users/<int:user_id>', endpoint='user_resource')
+API.add_resource(UserListResource, '/api/users/', endpoint='user_list_resource')
+API.add_resource(UserResource, '/api/users/<int:user_id>', endpoint='user_resource')

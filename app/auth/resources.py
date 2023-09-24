@@ -7,18 +7,18 @@ from ..users.models import User
 from .schemas import LoginInputSchema
 from .utils import DataAuthentication, TokenGenerator
 
-auth_bp = Blueprint('auth_bp', __name__)
+AUTH_BP = Blueprint('auth_bp', __name__)
 
-api = Api(auth_bp)
+API = Api(AUTH_BP)
 
 
 class RegistrationResource(Resource):
     
     def post(self):
-        user_schema = UserSchema()
+        USER_SCHEMA = UserSchema()
         
         data = request.get_json()
-        user_dict = user_schema.load(data)
+        user_dict = USER_SCHEMA.load(data)
         
         existing_email = DataAuthentication.check_email_exists(user_dict['email'])
         if existing_email:
@@ -31,17 +31,17 @@ class RegistrationResource(Resource):
         )
         user.save()
         
-        resp = user_schema.dump(user)
+        resp = USER_SCHEMA.dump(user)
         return resp, 201
 
 
 class AuthenticationResource(Resource):
     
     def post(self):
-        login_input_schema = LoginInputSchema()
+        LOGIN_INPUT_SCHEMA = LoginInputSchema()
         
         data = request.get_json()
-        account_dict = login_input_schema.load(data)
+        account_dict = LOGIN_INPUT_SCHEMA.load(data)
         
         user = DataAuthentication.check_email_exists(account_dict['email'])
         if user is None:
@@ -67,6 +67,6 @@ class ActiveSessionResource(Resource):
             return False
 
 
-api.add_resource(RegistrationResource, '/api/auth/signup', endpoint='registration_resource')
-api.add_resource(AuthenticationResource, '/api/auth/login', endpoint='authentication_resource')
-api.add_resource(ActiveSessionResource, '/api/auth/session', endpoint='active_session_resource')
+API.add_resource(RegistrationResource, '/api/auth/signup', endpoint='registration_resource')
+API.add_resource(AuthenticationResource, '/api/auth/login', endpoint='authentication_resource')
+API.add_resource(ActiveSessionResource, '/api/auth/session', endpoint='active_session_resource')

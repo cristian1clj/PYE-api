@@ -8,11 +8,11 @@ from .models import Difficulty
 from ...users.models import User
 from ..words.models import Word
 
-difficulty_bp = Blueprint('difficulty_bp', __name__)
+DIFFICULTY_BP = Blueprint('difficulty_bp', __name__)
 
-difficulty_schema = DifficultySchema()
+DIFFICULTY_SCHEMA = DifficultySchema()
 
-api = Api(difficulty_bp)
+API = Api(DIFFICULTY_BP)
 
 
 class DifficultyListResource(Resource):
@@ -20,13 +20,13 @@ class DifficultyListResource(Resource):
     @jwt_required
     def get(self):
         words = Difficulty.get_all()
-        result = difficulty_schema.dump(words, many=True)
+        result = DIFFICULTY_SCHEMA.dump(words, many=True)
         return result
     
     @jwt_required
     def post(self, current_user):
         data = request.get_json()
-        difficulty_dict = difficulty_schema.load(data)
+        difficulty_dict = DIFFICULTY_SCHEMA.load(data)
         
         DataAuthentication.check_access_by_id(
             difficulty_dict['user_id'], 
@@ -55,7 +55,7 @@ class DifficultyListResource(Resource):
         )
         difficulty.save()
         
-        resp = difficulty_schema.dump(difficulty)
+        resp = DIFFICULTY_SCHEMA.dump(difficulty)
         return resp, 201
 
 
@@ -85,7 +85,7 @@ class DifficultyResource(Resource):
             current_user['id']
             )
         
-        result = difficulty_schema.dump(difficulty)
+        result = DIFFICULTY_SCHEMA.dump(difficulty)
         return result
     
     @jwt_required
@@ -97,11 +97,11 @@ class DifficultyResource(Resource):
             )
 
         data = request.get_json()
-        # difficulty_dict = difficulty_schema.load(data)
+        # difficulty_dict = DIFFICULTY_SCHEMA.load(data)
         difficulty.difficulty_level = data['difficulty_level']
         difficulty.update()
         
-        resp = difficulty_schema.dump(difficulty)
+        resp = DIFFICULTY_SCHEMA.dump(difficulty)
         return resp
     
     @jwt_required
@@ -115,5 +115,5 @@ class DifficultyResource(Resource):
         return {"message": "Difficulty deleted"}
     
 
-api.add_resource(DifficultyListResource, '/api/vocabulary/difficulty/', endpoint='difficulty_list_resource')
-api.add_resource(DifficultyResource, '/api/vocabulary/difficulty/user/<int:user_id>/word/<int:word_id>', endpoint='difficulty_resource')
+API.add_resource(DifficultyListResource, '/api/vocabulary/difficulty/', endpoint='difficulty_list_resource')
+API.add_resource(DifficultyResource, '/api/vocabulary/difficulty/user/<int:user_id>/word/<int:word_id>', endpoint='difficulty_resource')
