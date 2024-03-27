@@ -560,3 +560,8 @@ flask run
     </td>
   </tr>
 </table>
+
+## 👍 Suggestions are welcome
+If you see something wrong or that could be better, please let me know via [**GitHub**](https://github.com/cristian1clj) or my email (**cristian1clj@gmail.com**) 🙏
+
+That would help me to improve my skills
